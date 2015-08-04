@@ -1,134 +1,23 @@
-![travis](https://travis-ci.org/brigand/react-mixin.svg)
+The Facebook React blog post for   says:
 
-Want to use ES6/CoffeeScript/TypeScript/{InsertNoun}Script classes, and mixins?
-
-React doesn't have anything built in for this, but don't worry!  This package implements
-react's mixin strategy for arbitrary objects.
-
-Install with one of:
-
-```sh
-# recommended
-npm install --save react-mixin@1
-
-# will expose window.reactMixin or the reactMixin AMD module
-curl 'wzrd.in/standalone/react-mixin@1' > vendor/react-mixin.js
 ```
+Today, we're happy to release React v0.13!
 
-
-Here's an example:
-
-```js
-var reactMixin = require('react-mixin');
-var someMixin = require('some-mixin');
-class Foo extends React.Component {
-    render: function(){ return <div /> }    
-}
-reactMixin(Foo.prototype, someMixin);
-reactMixin(Foo.prototype, someOtherMixin);
+The most notable new feature is support for ES6 classes, which allows developers to have more flexibility when writing components. Our eventual goal is for ES6 classes to replace React.createClass completely, but until we have a replacement for current mixin use cases and support for class property initializers in the language, we don't plan to deprecate React.createClass.
 ```
+I have been developing a React project using ES6 and the class constructor syntax despite the frustration of not having ready access to mixins. When I discovered that Frankie Bagnardi's [react-mixin](https://github.com/brigand/react-mixin) worked right out of the box for most of the mixins I tried, I felt compelled to share the news. 
 
-## Class level behavior
+This repo demonstrates that the React mixins in the library obtained with "npm install react" are readily available for use in an ES6 component. The precise location is "node_modules/react/lib/. The code for incorporating the mixins is at the end of the Component_1 example, and also at the end of this README file.
 
-Many of the things that were regular properties in createClass are now static properties of the class.  To have things like getDefaultProps, propTypes, and getInitialState working correctly you need to apply react-mixin a level higher than the prototype: the class itself.
+reactMixin(Component_1.prototype, require('./set-timeout-mixin'));
+reactMixin(Component_1.prototype, require('./node_modules/react/lib/ReactComponentWithPureRenderMixin'));
+reactMixin(Component_1.prototype, require('./node_modules/react/lib/LinkedStateMixin'));
+reactMixin(Component_1.prototype, require('./node_modules/react/lib/AutoFocusMixin'));
 
-```js
-var mixin = {
-  getDefaultProps: function(){
-    return {b: 2};
-  }
-};
 
-class Foo {
-  static defaultProps = {
-    a: 1
-  };
-  render(){
-    console.log(this.props); // {a: 1, b: 2}
-  }
-}
 
-reactMixin.onClass(Foo, mixin);
-```
 
-## But it's at the end of the file!
 
-For more readability, there is an es7 decorator proposal.  With the latest babel version and the stage config option set to 0 or 1, you can use decorators.
 
-```js
-@reactMixin.decorate(mixin)
-class Foo {
-  static defa...
-}
-```
 
-This is a very thin wrapper.
-
-```js
-  reactMixin.decorate = function(mixin) {
-    return function(reactClass) {
-      return reactMixin.onClass(reactClass, mixin);
-    };
-  }
-```
-
-## Differences from createClass
-
-@ndout resolved the differences by adding `reactMixin.onClass`.  If there are any more incompatibilites, **other than autobinding methods which is intentionally omitted**, please create an issue.
-
----
-
-That's pretty much it.  You get errors instead of silently overwriting things, like in react,
-with the exception of things whitelisted in index.js as type MANY, MANY_MERGED (getDefaultProps/getInitialState).
-
-Autobinding is done by React.createClass, and there's no equivilent in ES6 classes.  This also has better performance (I think), but you do lose some convenience.  You can explicitly bind things in the constructor or componentWillMount.  On the main class, the constructor replaces componentWillMount.
-
-```js
-class Foo extends React.Component {
-    constructor(props){
-        super(props);
-        this.handleChange = this.handleChange.bind(this);
-    }
-    ...
-}
-```
-
-## But... autobinding!
-
-If you need autobinding because a mixin depends on it, you can bind the needed methods in the constructor, or do something like this (haven't given it much thought, suggestions welcome).
-
-```js
-function autobind(methodNames){
-    return {
-        componentWillMount: function(){
-            methodNames.forEach((name) => {
-                this[name] = this[name].bind(this);
-            });
-        }
-    };
-}
-
-@reactMixin.decorate(mixin)
-@reactMixin.decorate(autobind(Object.keys(mixin)))
-class Foo {
-  ...
-}
-```
-
-Like this but want to use it outside of react?  See [smart-mixin][1] and define your own mixin spec.
-
-## Should I use this?
-
-I can't think of a more elegant solution to mixins in es6 classes.  If someone comes up with one, create an issue
-and I'll link to it here.
-
-In the future people will likely use [high order components](https://medium.com/@dan_abramov/mixins-are-dead-long-live-higher-order-components-94a0d2f9e750) instead of mixins, making this library obsolete. 
-
-Should you use es6 classes for react components?  Based on the hacks required above, I'd probably avoid it.
-It's important that react makes it an option, and it's important to be able to use mixins with them, which
-is why this library exists.
-
-`createClass` isn't going anywhere.
-
-[1]: https://github.com/brigand/smart-mixin
 
